@@ -42,14 +42,49 @@
   /* ───────── "Encontrá tu lugar": tarjeta activa ───────── */
   const cards = $$('.lcard');
   const activate = card => {
-    cards.forEach(c => c.classList.toggle('is-active', c === card));
+    const index = cards.indexOf(card);
+    cards.forEach((c, i) => {
+      c.classList.toggle('is-active', i === index);
+      c.classList.toggle('is-prev', i === (index + cards.length - 1) % cards.length);
+      c.classList.toggle('is-next', i === (index + 1) % cards.length);
+    });
   };
+  activate($('.lcard.is-active') || cards[0]);
   cards.forEach(card => {
     card.addEventListener('click', event => { if (!event.target.closest('.open')) activate(card); });
     card.addEventListener('keydown', event => {
       if ((event.key === 'Enter' || event.key === ' ') && event.target === card) { event.preventDefault(); activate(card); }
     });
   });
+
+  const controls = document.createElement('div');
+  controls.className = 'lugar-controls';
+  controls.innerHTML = '<button type="button" aria-label="Estadía anterior">←</button><button type="button" aria-label="Estadía siguiente">→</button>';
+  lugarAppendControls();
+  function lugarAppendControls() { $('.lugar').append(controls); }
+  controls.querySelectorAll('button').forEach((button, i) => button.addEventListener('click', () => {
+    const current = cards.findIndex(card => card.classList.contains('is-active'));
+    activate(cards[(current + (i ? 1 : cards.length - 1)) % cards.length]);
+  }));
+
+  // Expand the photograph into a viewport-sized layer, preserving the page beneath.
+  const arch = $('.arch');
+  const preview = document.createElement('div');
+  preview.className = 'inspire-preview';
+  preview.setAttribute('aria-hidden', 'true');
+  preview.innerHTML = '<img src="assets/fdfa7.webp" alt=""><span>Estadías que inspiran.</span>';
+  document.body.append(preview);
+  const openPreview = () => {
+    const rect = arch.getBoundingClientRect();
+    preview.style.setProperty('--preview-clip', `inset(${Math.max(0, rect.top)}px ${Math.max(0, innerWidth - rect.right)}px ${Math.max(0, innerHeight - rect.bottom)}px ${Math.max(0, rect.left)}px round 28px)`);
+    preview.classList.add('is-visible');
+  };
+  const closePreview = () => preview.classList.remove('is-visible');
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    arch.addEventListener('pointerenter', openPreview);
+    arch.addEventListener('pointerleave', closePreview);
+  }
+  window.addEventListener('scroll', closePreview, { passive: true });
 
   // Rotate the featured stay only while the section is visible and idle.
   const lugar = $('.lugar');
@@ -186,6 +221,12 @@
     });
     gsap.from('.reviews-side, .review', { y: 36, opacity: 0, duration: .8, stagger: .12, ...entrance, scrollTrigger: { trigger: '.reviews-body', start: 'top 85%', once: true } });
     gsap.from('.foot-top > *', { y: 30, opacity: 0, duration: .8, stagger: .12, ...entrance, scrollTrigger: { trigger: '.site-footer', start: 'top 85%', once: true } });
+
+    // The dark surface grows into the viewport as the statement enters.
+    gsap.fromTo('.statement-bg', { scaleX: .72, scaleY: .65, borderRadius: '70px' }, {
+      scaleX: 1, scaleY: 1, borderRadius: '0px', ease: 'none',
+      scrollTrigger: { trigger: '.statement', start: 'top bottom', end: 'top top', scrub: .8 }
+    });
 
     // Frase que se va revelando con el scroll
     const para = $('.words');
