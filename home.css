@@ -300,3 +300,37 @@ h2 { font-family: var(--display); font-weight: 500; letter-spacing: -.035em; lin
   .hero-bg .slide:first-child, .hero-place .slide:first-child { opacity: 1; }
   .lcard, .arch img, .destinos-photos img, .reviews-list, .rtrack i { transition: none; }
 }
+
+/* Editorial motion */
+.inspire-grid { transition: grid-template-columns .7s cubic-bezier(.22,1,.36,1), gap .7s cubic-bezier(.22,1,.36,1); }
+.arch { transition: border-radius .7s cubic-bezier(.22,1,.36,1); }
+@media (hover: hover) and (pointer: fine) and (min-width: 901px) {
+  .inspire-grid:has(.arch:hover) { grid-template-columns: minmax(150px, .7fr) minmax(440px, 2.6fr) minmax(150px, .7fr); gap: 32px; }
+  .arch:hover { border-radius: 28px; }
+  .arch:hover img { transform: scale(1.08); }
+}
+.destinos-photos { gap: 10px; }
+.destinos-photos a { flex: 1 1 0; min-width: 0; transition: flex .7s cubic-bezier(.22,1,.36,1); }
+.destinos-photos a.down { margin-top: 0; }
+.destinos-photos a:first-child { flex: 3 1 0; }
+.destinos-photos:has(a:hover) a, .destinos-photos:has(a:focus-visible) a { flex: 1 1 0; }
+.destinos-photos a:hover, .destinos-photos a:focus-visible { flex: 3 1 0 !important; }
+.destinos-photos span { white-space: nowrap; }
+.statement { position: relative; overflow: hidden; margin: 60px -16px 0; padding: 160px 48px 190px; border: 0; background: #101314; color: #fff; }
+.statement::after { content: ''; position: absolute; bottom: -1px; left: -2%; width: 104%; height: 65px; background: #f8f8f6; border-radius: 50% 50% 0 0 / 100% 100% 0 0; }
+.words .w { color: #f5f5f4; }
+.js-words .words .w { color: #818789; }
+.reviews { padding-top: 85px; }
+@media (max-width: 700px) {
+  .destinos-photos { gap: 6px; }
+  .destinos-photos a { border-radius: 14px; }
+  .destinos-photos a:first-child { flex: 2 1 0; }
+  .destinos-photos span { padding: 12px 8px; }
+  .destinos-photos strong { font-size: 13px; }
+  .destinos-photos small { font-size: 10px; }
+  .statement { padding: 110px 28px 135px; }
+  .statement::after { height: 38px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .inspire-grid, .arch, .destinos-photos a { transition: none; }
+}

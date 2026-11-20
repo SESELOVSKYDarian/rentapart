@@ -51,6 +51,24 @@
     });
   });
 
+  // Rotate the featured stay only while the section is visible and idle.
+  const lugar = $('.lugar');
+  let lugarVisible = false;
+  let lugarPaused = false;
+  if (!reduced && cards.length > 1) {
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(entries => { lugarVisible = entries[0].isIntersecting; }, { threshold: .25 }).observe(lugar);
+    } else lugarVisible = true;
+    lugar.addEventListener('pointerenter', () => { lugarPaused = true; });
+    lugar.addEventListener('pointerleave', () => { lugarPaused = false; });
+    lugar.addEventListener('focusin', () => { lugarPaused = true; });
+    lugar.addEventListener('focusout', event => { if (!lugar.contains(event.relatedTarget)) lugarPaused = false; });
+    setInterval(() => {
+      if (!lugarVisible || lugarPaused || document.hidden) return;
+      const current = cards.findIndex(card => card.classList.contains('is-active'));
+      activate(cards[(current + 1) % cards.length]);
+    }, 5000);
+  }
   /* ───────── Reseñas ───────── */
   // Reseñas de ejemplo: reemplazar por las reales del huésped.
   const REVIEWS = [
@@ -166,7 +184,7 @@
     $$('.reveal').forEach(el => {
       gsap.from(el, { y: 44, opacity: 0, duration: .9, ...entrance, scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
     });
-    gsap.from('.reviews-body', { y: 40, opacity: 0, duration: .9, ...entrance, scrollTrigger: { trigger: '.reviews-body', start: 'top 88%', once: true } });
+    gsap.from('.reviews-side, .review', { y: 36, opacity: 0, duration: .8, stagger: .12, ...entrance, scrollTrigger: { trigger: '.reviews-body', start: 'top 85%', once: true } });
     gsap.from('.foot-top > *', { y: 30, opacity: 0, duration: .8, stagger: .12, ...entrance, scrollTrigger: { trigger: '.site-footer', start: 'top 85%', once: true } });
 
     // Frase que se va revelando con el scroll
@@ -182,7 +200,7 @@
     });
     document.documentElement.classList.add('js-words');
     gsap.to(words, {
-      color: getComputedStyle(document.documentElement).getPropertyValue('--rentapart-ink').trim() || '#171a1b',
+      color: '#f5f5f4',
       ease: 'none', stagger: .12,
       scrollTrigger: { trigger: '.statement', start: 'top 72%', end: 'bottom 55%', scrub: .5 }
     });
