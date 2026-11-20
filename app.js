@@ -503,7 +503,7 @@ app.addEventListener('click', event => {
 });
 
 function show(title,body,actions=''){modal.innerHTML=`<div class="overlay"><div class="dialog"><button class="close" data-action="cerrar" aria-label="Cerrar">×</button><h2>${title}</h2>${body}${actions}</div></div>`}
-function render(){const parts=location.hash.slice(1).split('/'), page=parts[0]||'explorar';admin=page==='admin';if(page==='explorar')app.innerHTML=explorar();else if(page==='departamento')app.innerHTML=departamento();else if(page==='reservar')app.innerHTML=reservar();else if(page==='confirmacion')app.innerHTML=confirmacion();else if(page==='acceso')app.innerHTML=acceso();else if(page==='agente')app.innerHTML=agent(parts[1]||'resumen');else if(page==='admin')app.innerHTML=administration(parts[1]||'resumen');else app.innerHTML=explorar();window.scrollTo(0,0)}
+function render(){const parts=location.hash.slice(1).split('/'), page=parts[0]||'explorar';admin=page==='admin';if(page==='explorar')app.innerHTML=explorar();else if(page==='departamento')app.innerHTML=departamento();else if(page==='reservar')app.innerHTML=reservar();else if(page==='confirmacion')app.innerHTML=confirmacion();else if(page==='acceso')app.innerHTML=acceso();else if(page==='agente')app.innerHTML=agent(parts[1]||'resumen');else if(page==='admin')app.innerHTML=administration(parts[1]||'resumen');else app.innerHTML=explorar();window.scrollTo({top:0, left:0, behavior:"instant"})}
 window.addEventListener('hashchange', () => {
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (document.startViewTransition && !reducedMotion) {
