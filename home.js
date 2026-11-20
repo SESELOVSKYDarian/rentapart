@@ -67,25 +67,6 @@
     activate(cards[(current + (i ? 1 : cards.length - 1)) % cards.length]);
   }));
 
-  // Expand the photograph into a viewport-sized layer, preserving the page beneath.
-  const arch = $('.arch');
-  const preview = document.createElement('div');
-  preview.className = 'inspire-preview';
-  preview.setAttribute('aria-hidden', 'true');
-  preview.innerHTML = '<img src="assets/fdfa7.webp" alt=""><span>Estadías que inspiran.</span>';
-  document.body.append(preview);
-  const openPreview = () => {
-    const rect = arch.getBoundingClientRect();
-    preview.style.setProperty('--preview-clip', `inset(${Math.max(0, rect.top)}px ${Math.max(0, innerWidth - rect.right)}px ${Math.max(0, innerHeight - rect.bottom)}px ${Math.max(0, rect.left)}px round 28px)`);
-    preview.classList.add('is-visible');
-  };
-  const closePreview = () => preview.classList.remove('is-visible');
-  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    arch.addEventListener('pointerenter', openPreview);
-    arch.addEventListener('pointerleave', closePreview);
-  }
-  window.addEventListener('scroll', closePreview, { passive: true });
-
   // Rotate the featured stay only while the section is visible and idle.
   const lugar = $('.lugar');
   let lugarVisible = false;
@@ -222,7 +203,20 @@
     gsap.from('.reviews-side, .review', { y: 36, opacity: 0, duration: .8, stagger: .12, ...entrance, scrollTrigger: { trigger: '.reviews-body', start: 'top 85%', once: true } });
     gsap.from('.foot-top > *', { y: 30, opacity: 0, duration: .8, stagger: .12, ...entrance, scrollTrigger: { trigger: '.site-footer', start: 'top 85%', once: true } });
 
-    // The dark surface grows into the viewport as the statement enters.
+    // Pin the image section while the photograph fills the viewport.
+    const arch = $('.arch');
+    gsap.timeline({ scrollTrigger: {
+      trigger: '.inspire', start: 'top top', end: '+=100%', pin: true, scrub: .7,
+      invalidateOnRefresh: true
+    } }).to(arch, {
+      x: () => innerWidth / 2 - (arch.getBoundingClientRect().left + arch.offsetWidth / 2),
+      y: () => innerHeight / 2 - (arch.getBoundingClientRect().top + arch.offsetHeight / 2),
+      scaleX: () => innerWidth / arch.offsetWidth,
+      scaleY: () => innerHeight / arch.offsetHeight,
+      borderRadius: 0, ease: 'none'
+    });
+
+    // Expand the dark surface into a full viewport while keeping the navigation above it.
     gsap.fromTo('.statement-bg', { scaleX: .72, scaleY: .65, borderRadius: '70px' }, {
       scaleX: 1, scaleY: 1, borderRadius: '0px', ease: 'none',
       scrollTrigger: { trigger: '.statement', start: 'top bottom', end: 'top top', scrub: .8 }
