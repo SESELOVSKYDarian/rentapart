@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>rentapart — Alquileres temporarios en los mejores destinos</title>
+<meta name="description" content="Alquileres temporarios en los mejores destinos. Reservá tu próxima estadía de forma simple, segura y 100% online.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="assets/93faf.webp">
+<link rel="stylesheet" href="home.css">
+<link rel="stylesheet" href="navbar.css">
+<script defer src="navbar.js"></script>
+<script defer src="vendor/gsap.min.js"></script>
+<script defer src="vendor/ScrollTrigger.min.js"></script>
+<script defer src="home.js"></script>
+<script defer src="calendar.js"></script>
+</head>
+<body class="is-home">
+
+<div class="opening-screen" hidden>
+  <span class="opening-word">rentapart</span>
+  <button type="button" class="opening-skip">Saltar intro</button>
+</div>
+
+<rentapart-navbar></rentapart-navbar>
+
+<main>
+  <section class="hero" aria-label="Inicio">
+    <div class="hero-bg" aria-hidden="true">
+      <div class="slide" style="animation-delay:-1s"><i style="background-image:url('assets/93faf.webp')"></i></div>
+      <div class="slide" style="animation-delay:5s"><i style="background-image:url('assets/29605.webp')"></i></div>
+      <div class="slide" style="animation-delay:11s"><i style="background-image:url('assets/f9321.webp')"></i></div>
+    </div>
+    <div class="hero-shade" aria-hidden="true"></div>
+
+    <div class="hero-copy">
+      <h1><span class="line"><span>Alquileres temporarios</span></span> <span class="line"><span>en los mejores destinos.</span></span></h1>
+    </div>
+
+    <div class="hero-place">
+      <a class="place-card slide" style="animation-delay:-1s" href="app.html#departamento" data-property="0">
+        <span class="thumb" style="background-image:url('assets/93faf.webp')"></span>
+        <span class="info"><strong>Palermo botánico</strong><span>Palermo, Buenos Aires</span><span>USD 85 por noche</span><span class="go">Ver propiedad <span class="arrow" aria-hidden="true">→</span></span></span>
+      </a>
+      <a class="place-card slide" style="animation-delay:5s" href="app.html#departamento" data-property="1">
+        <span class="thumb" style="background-image:url('assets/29605.webp')"></span>
+        <span class="info"><strong>Recoleta luz</strong><span>Recoleta, Buenos Aires</span><span>USD 110 por noche</span><span class="go">Ver propiedad <span class="arrow" aria-hidden="true">→</span></span></span>
+      </a>
+      <a class="place-card slide" style="animation-delay:11s" href="app.html#departamento" data-property="2">
+        <span class="thumb" style="background-image:url('assets/f9321.webp')"></span>
+        <span class="info"><strong>Núñez calma</strong><span>Núñez, Buenos Aires</span><span>USD 72 por noche</span><span class="go">Ver propiedad <span class="arrow" aria-hidden="true">→</span></span></span>
+      </a>
+    </div>
+
+    <form class="search" action="app.html#explorar" role="search">
+      <label class="s-field s-dest"><span>Destino</span><input name="destination" type="text" placeholder="Buscá un destino" autocomplete="off"></label>
+      <label class="s-field s-type"><span>Tipo</span>
+        <select name="type">
+          <option value="">Cualquier tipo</option>
+          <option>Monoambiente</option>
+          <option>Departamento</option>
+          <option>Dúplex</option>
+          <option>Casa</option>
+        </select>
+      </label>
+      <div class="s-field s-dates" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false"><span>Fechas</span><b class="dates-text">Agregá fechas</b>
+        <input name="arrival" type="hidden"><input name="departure" type="hidden">
+      </div>
+      <label class="s-field s-guests"><span>Huéspedes</span>
+        <select name="guests">
+          <option value="2">2 huéspedes</option>
+          <option value="1">1 huésped</option>
+          <option value="3">3 huéspedes</option>
+          <option value="4">4 huéspedes</option>
+          <option value="5">5 o más</option>
+        </select>
+      </label>
+      <button class="search-cta" type="submit">Buscar</button>
+    </form>
+  </section>
+
+  <section id="explorar" class="inspire">
+    <h2 class="reveal">Estadías que inspiran.</h2>
+    <div class="inspire-grid">
+      <div class="inspire-copy reveal">
+        <h3>Departamentos verificados, con la mejor ubicación.</h3>
+        <p>Todo lo que necesitás para tu estadía, sin cargos ocultos ni sorpresas al final.</p>
+        <a class="pill dark" href="app.html#explorar">Explorar alojamientos</a>
+      </div>
+      <div class="arch reveal"><img src="assets/fdfa7.webp" alt="Interior luminoso de un departamento" loading="lazy"></div>
+      <ul class="perks reveal">
+        <li><strong>Guía experta</strong><span>Te acompañamos antes, durante y después de tu estadía.</span></li>
+        <li><strong>Precio final claro</strong><span>Ves el total con limpieza y tasas desde el principio.</span></li>
+        <li><strong>Check-in autónomo</strong><span>Llegás cuando quieras, sin esperar a nadie.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="destinos" aria-labelledby="destinos-title">
+    <div class="destinos-inner">
+      <div class="destinos-photos">
+        <a href="app.html#departamento" data-property="0"><img src="assets/fdfa7.webp" alt="Palermo" loading="lazy"><span><strong>Palermo</strong><small>USD 85 / noche</small></span></a>
+        <a href="app.html#departamento" data-property="1" class="down"><img src="assets/29605.webp" alt="Recoleta" loading="lazy"><span><strong>Recoleta</strong><small>USD 110 / noche</small></span></a>
+        <a href="app.html#departamento" data-property="2"><img src="assets/f9321.webp" alt="Núñez" loading="lazy"><span><strong>Núñez</strong><small>USD 72 / noche</small></span></a>
+      </div>
+      <div class="destinos-copy reveal">
+        <h2 id="destinos-title">Conocé los destinos.</h2>
+        <p>Lugares para vivir cada destino como un vecino más.</p>
+        <a class="pill light" href="app.html#explorar">Ver todos</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="lugar" aria-labelledby="lugar-title">
+    <div class="lugar-head reveal"><h2 id="lugar-title">Encontrá tu lugar.</h2><p>Tocá una estadía para destacarla. Todas con precio por noche, todo incluido.</p></div>
+    <div class="lugar-row">
+      <article class="lcard" tabindex="0" data-property="0" style="background-image:url('assets/fdfa7.webp')">
+        <span class="tag">Favorito</span>
+        <span class="meta"><span><strong>Palermo botánico</strong><small>Palermo, Buenos Aires</small></span><b>USD 85</b></span>
+        <a class="open" href="app.html#departamento" data-property="0" aria-label="Ver Palermo botánico">Ver propiedad</a>
+      </article>
+      <article class="lcard is-active" tabindex="0" data-property="1" style="background-image:url('assets/29605.webp')">
+        <span class="tag">Nuevo</span>
+        <span class="meta"><span><strong>Recoleta luz</strong><small>Recoleta, Buenos Aires</small></span><b>USD 110</b></span>
+        <a class="open" href="app.html#departamento" data-property="1" aria-label="Ver Recoleta luz">Ver propiedad</a>
+      </article>
+      <article class="lcard" tabindex="0" data-property="2" style="background-image:url('assets/12205.webp')">
+        <span class="tag">Disponible</span>
+        <span class="meta"><span><strong>Núñez calma</strong><small>Núñez, Buenos Aires</small></span><b>USD 72</b></span>
+        <a class="open" href="app.html#departamento" data-property="2" aria-label="Ver Núñez calma">Ver propiedad</a>
+      </article>
+    </div>
+  </section>
+
+  <section id="nosotros" class="statement" aria-label="Sobre rentapart">
+    <p class="words">Destinos para elegir. 100% reserva online, sin intermediarios. Desde USD 72 por noche. Quedate como en casa, viví cada lugar como un vecino.</p>
+  </section>
+
+  <section class="reviews" id="resenas" aria-labelledby="reviews-title">
+    <div class="reviews-head reveal">
+      <h2 id="reviews-title">Leé las reseñas,<br><b>viajá con confianza.</b></h2>
+    </div>
+    <div class="reviews-body">
+      <div class="reviews-side">
+        <svg width="68" height="54" viewBox="0 0 68 54" aria-hidden="true"><path d="M0 54V30C0 12 9 2 26 0v12C18 14 14 19 14 27h12v27H0Zm40 0V30C40 12 49 2 66 0v12c-8 2-12 7-12 15h12v27H40Z" fill="#b9bcbd"/></svg>
+        <h3>Lo que dicen nuestros huéspedes</h3>
+        <div class="reviews-nav">
+          <button type="button" class="rbtn" data-r="-1" aria-label="Reseña anterior">←</button>
+          <span class="rtrack" aria-hidden="true"><i></i></span>
+          <button type="button" class="rbtn" data-r="1" aria-label="Reseña siguiente">→</button>
+        </div>
+      </div>
+      <div class="reviews-window">
+        <ul class="reviews-list" id="reviews-list"></ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="foot-top">
+    <div class="foot-brand">
+      <a href="index.html" class="foot-logo">rentapart</a>
+      <p>Alquileres temporarios en los mejores destinos. Simple, seguro y 100% online.</p>
+      <a class="pill paper" href="app.html#explorar">Reservar ahora</a>
+    </div>
+    <div class="foot-cols">
+      <div><span>Explorar</span><a href="app.html#explorar">Destinos</a><a href="app.html#explorar">Propiedades</a><a href="#nosotros">Nosotros</a></div>
+      <div><span>Anfitriones</span><a href="app.html#acceso">Soy agente</a><a href="app.html#acceso">Publicá tu propiedad</a></div>
+      <div><span>Contacto</span><a class="foot-mail" href="mailto:hola@rentapart.com">hola@rentapart.com</a><a class="foot-wa" href="https://wa.me/5491155550101">WhatsApp</a></div>
+    </div>
+  </div>
+  <div class="foot-bottom"><span>© 2026 rentapart</span><span>Términos y privacidad</span></div>
+</footer>
+
+</body>
+</html>
