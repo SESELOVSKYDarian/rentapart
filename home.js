@@ -203,19 +203,6 @@
     gsap.from('.reviews-side, .review', { y: 36, opacity: 0, duration: .8, stagger: .12, ...entrance, scrollTrigger: { trigger: '.reviews-body', start: 'top 85%', once: true } });
     gsap.from('.foot-top > *', { y: 30, opacity: 0, duration: .8, stagger: .12, ...entrance, scrollTrigger: { trigger: '.site-footer', start: 'top 85%', once: true } });
 
-    // Pin the image section while the photograph fills the viewport.
-    const arch = $('.arch');
-    gsap.timeline({ scrollTrigger: {
-      trigger: '.inspire', start: 'top top', end: '+=100%', pin: true, scrub: .7,
-      invalidateOnRefresh: true
-    } }).to(arch, {
-      x: () => innerWidth / 2 - (arch.getBoundingClientRect().left + arch.offsetWidth / 2),
-      y: () => innerHeight / 2 - (arch.getBoundingClientRect().top + arch.offsetHeight / 2),
-      scaleX: () => innerWidth / arch.offsetWidth,
-      scaleY: () => innerHeight / arch.offsetHeight,
-      borderRadius: 0, ease: 'none'
-    });
-
     // Expand the dark surface into a full viewport while keeping the navigation above it.
     gsap.fromTo('.statement-bg', { scaleX: .72, scaleY: .65, borderRadius: '70px' }, {
       scaleX: 1, scaleY: 1, borderRadius: '0px', ease: 'none',
