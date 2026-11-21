@@ -221,10 +221,9 @@
       return span;
     });
     document.documentElement.classList.add('js-words');
-    gsap.to(words, {
-      color: '#f5f5f4',
-      ease: 'none', stagger: .12,
-      scrollTrigger: { trigger: '.statement', start: 'top 72%', end: 'bottom 55%', scrub: .5 }
+    gsap.fromTo(words, { opacity: .12 }, {
+      opacity: 1, ease: 'none', stagger: .2,
+      scrollTrigger: { trigger: '.statement', start: 'top top', end: '+=220%', pin: true, scrub: 1, anticipatePin: 1 }
     });
 
     return () => {

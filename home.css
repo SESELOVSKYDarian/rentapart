@@ -368,3 +368,6 @@ rentapart-navbar.on-hero { z-index: 100; }
   .lcard .tag { left: 10px; top: 12px; font-size: 10px; }
   .lcard .open { right: 10px; top: 12px; padding: 8px; font-size: 11px; }
 }
+
+/* The statement reveals gradually during the pinned scroll. */
+.js-words .words .w { color: #f5f5f4; }
