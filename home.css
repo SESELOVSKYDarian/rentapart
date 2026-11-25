@@ -422,3 +422,17 @@ rentapart-navbar.on-hero { z-index: 100; }
   .s-field { padding: 9px 12px; }
   .lcard, .lcard.is-active { flex-basis: 82vw; width: 82vw; height: 390px; }
 }
+
+/* Reseñas en pantallas chicas: la ventana ocupa el ancho disponible y las tarjetas se ajustan */
+@media (max-width: 1100px) {
+  .reviews-body { align-items: stretch; }
+  .reviews-window { width: 100%; max-width: 100%; align-self: stretch; padding-bottom: 70px; }
+  .review { flex: 0 0 min(340px, 86%); }
+}
+@media (max-width: 700px) {
+  .reviews-body { gap: 28px; }
+  .reviews-side h3 { font-size: 24px; margin-top: 18px; }
+  .reviews-nav { margin-top: 24px; }
+  .review .bubble { min-height: 210px; padding: 22px; }
+  .review .bubble p { font-size: 15px; }
+}
