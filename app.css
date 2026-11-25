@@ -119,3 +119,19 @@ body { font-family: 'Geist', 'DM Sans', sans-serif; }
   .fx h1 { left: 22px; right: 22px; bottom: 24px; }
 }
 @media (prefers-reduced-motion: reduce) { .rx-card, .fx-bg, .fx h1 { animation: none; } .rx-photo img { transition: none; } }
+
+@media (max-width: 620px) { .fx-where { display: none; } .fx-bar { left: 18px; right: 18px; top: 18px; } .fx-hero { border-radius: 24px; } .fx-body { padding-top: 28px; } .fx-facts span { font-size: 12px; padding: 8px 13px; } .rx-tools { justify-content: flex-start; } }
+
+/* Responsive: paneles con tablas, campos de fecha y barras laterales */
+@media (max-width: 850px) {
+  .dashboard, .dashbody { min-width: 0; max-width: 100vw; overflow-x: clip; }
+  .dash-grid > *, .editor-grid > *, .stats > * { min-width: 0; }
+  .panel { overflow-x: auto; }
+  .sidebar { max-width: 100vw; }
+}
+@media (max-width: 420px) {
+  .trip-fields { grid-template-columns: 1fr; }
+  .trip-fields > *, .trip-field { min-width: 0; }
+  .fx-book { padding: 24px 20px; }
+}
+@media (max-width: 760px) { .fx-book { min-width: 0; width: 100%; } .fx-main { flex-basis: 100%; } }

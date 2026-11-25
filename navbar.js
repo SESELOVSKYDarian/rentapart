@@ -15,14 +15,16 @@ class RentApartNavbar extends HTMLElement {
       this.innerHTML = `
         <nav class="site-nav" aria-label="Navegación principal">
           <a class="site-brand" href="index.html" aria-label="rentapart, inicio">rentapart</a>
-          <div class="site-links">
+          <div class="site-links" id="site-links">
             <a href="index.html">Inicio</a>
             <a href="app.html#explorar">Explorar</a>
             <a href="index.html#nosotros">Nosotros</a>
+            <a class="menu-book" href="app.html#explorar">Reservar ahora</a>
           </div>
           <div class="site-actions">
-            <a class="site-book" href="app.html#explorar">Reservar ahora</a>
+            <a class="site-book" href="app.html#explorar">Reservar<span class="long"> ahora</span></a>
           </div>
+          <button type="button" class="site-menu" aria-expanded="false" aria-controls="site-links" aria-label="Abrir menú"><span></span><span></span><span></span></button>
         </nav>`;
       if (/^data:image\/(jpeg|png|webp);base64,/i.test(rentapartBrand.logo)) {
         const image = document.createElement('img');
@@ -50,6 +52,20 @@ class RentApartNavbar extends HTMLElement {
     this.updateState();
     window.addEventListener('hashchange', this.updateState);
 
+    const nav = this.querySelector('.site-nav');
+    const menu = this.querySelector('.site-menu');
+    this.setMenu = open => {
+      nav.classList.toggle('is-open', open);
+      menu.setAttribute('aria-expanded', String(open));
+      menu.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+    };
+    menu.addEventListener('click', () => this.setMenu(!nav.classList.contains('is-open')));
+    nav.querySelectorAll('.site-links a, .site-book').forEach(a => a.addEventListener('click', () => this.setMenu(false)));
+    this.onKey = event => { if (event.key === 'Escape') this.setMenu(false); };
+    this.onOutside = event => { if (!this.contains(event.target)) this.setMenu(false); };
+    document.addEventListener('keydown', this.onKey);
+    document.addEventListener('pointerdown', this.onOutside);
+
     this.syncScroll = () => this.classList.toggle('is-floating', !onHero || window.scrollY > 60);
     this.syncScroll();
     window.addEventListener('scroll', this.syncScroll, { passive: true });
@@ -58,6 +74,8 @@ class RentApartNavbar extends HTMLElement {
   disconnectedCallback() {
     window.removeEventListener('hashchange', this.updateState);
     window.removeEventListener('scroll', this.syncScroll);
+    document.removeEventListener('keydown', this.onKey);
+    document.removeEventListener('pointerdown', this.onOutside);
   }
 }
 customElements.define('rentapart-navbar', RentApartNavbar);

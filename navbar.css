@@ -65,15 +65,40 @@ rentapart-navbar.on-hero:not(.is-floating) .site-nav { background: transparent; 
 rentapart-navbar.on-hero:not(.is-floating) .site-book { background: #fff; color: #171a1b; }
 rentapart-navbar.on-hero.is-floating { width: min(940px, calc(100% - 32px)); top: 16px; }
 
+.site-menu { display: none; }
+.menu-book { display: none; }
+.site-book .long { display: inline; margin-left: .3em; }
+
 @media (max-width: 760px) {
-  rentapart-navbar.on-hero { width: calc(100% - 24px); top: 18px; }
-  .site-nav { grid-template-columns: auto 1fr; padding: 8px 8px 8px 20px; gap: 6px 10px; min-height: 56px; }
-  .site-links { grid-column: 1 / -1; grid-row: 2; justify-self: center; gap: 28px; }
-  .site-actions { grid-column: 2; grid-row: 1; }
-  .site-brand { font-size: 20px; }
-  .site-book { min-height: 40px; padding: 0 18px; }
-  rentapart-navbar.on-hero:not(.is-floating) .site-nav { padding-bottom: 4px; }
+  rentapart-navbar.on-hero { width: calc(100% - 24px); top: 14px; }
+  rentapart-navbar.on-hero.is-floating { width: calc(100% - 24px); top: 10px; }
+  rentapart-navbar:not(.on-hero) { width: calc(100% - 24px); margin-top: 10px; top: 10px; }
+  .site-nav { position: relative; grid-template-columns: 1fr auto; gap: 8px; padding: 6px 8px 6px 22px; min-height: 56px; }
+  .site-brand { font-size: 21px; }
+  .site-actions { display: none; }
+  .site-menu {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+    width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+    background: transparent; color: inherit; cursor: pointer;
+  }
+  .site-menu span { display: block; width: 22px; height: 2px; border-radius: 2px; background: currentColor; transition: transform .35s cubic-bezier(.22,1,.36,1), opacity .2s; }
+  .site-nav.is-open .site-menu span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .site-nav.is-open .site-menu span:nth-child(2) { opacity: 0; }
+  .site-nav.is-open .site-menu span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  .site-links {
+    display: none; position: absolute; left: 0; right: 0; top: calc(100% + 8px);
+    flex-direction: column; gap: 0; padding: 8px;
+    background: #fff; color: var(--rentapart-ink, #171a1b);
+    border-radius: 24px; box-shadow: 0 18px 44px #171a1b33;
+  }
+  .site-nav.is-open .site-links { display: flex; animation: menuIn .3s cubic-bezier(.22,1,.36,1) both; }
+  .site-links a { padding: 16px 18px; font-size: 17px; border-radius: 14px; }
+  .site-links a::after { display: none; }
+  .site-links a[aria-current="page"] { background: #f5f5f4; }
+  .site-links .menu-book { display: flex; justify-content: center; margin-top: 6px; background: var(--rentapart-ink, #171a1b); color: #fff; font-size: 15px; font-weight: 500; }
 }
+@keyframes menuIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .site-menu span { transition: none; } .site-nav.is-open .site-links { animation: none; } }
 
 @media (prefers-reduced-motion: reduce) {
   .site-nav, .site-book, rentapart-navbar.on-hero, .site-links a::after { transition: none; }

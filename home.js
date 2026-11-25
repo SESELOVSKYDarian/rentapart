@@ -62,7 +62,13 @@
   controls.innerHTML = '<button type="button" aria-label="Estadía anterior">←</button><button type="button" aria-label="Estadía siguiente">→</button>';
   lugarAppendControls();
   function lugarAppendControls() { $('.lugar').append(controls); }
+  const narrow = matchMedia('(max-width: 860px)');
   controls.querySelectorAll('button').forEach((button, i) => button.addEventListener('click', () => {
+    if (narrow.matches) {
+      const stepPx = cards[0].getBoundingClientRect().width + 14;
+      $('.lugar-row').scrollBy({ left: (i ? 1 : -1) * stepPx, behavior: reduced ? 'auto' : 'smooth' });
+      return;
+    }
     const current = cards.findIndex(card => card.classList.contains('is-active'));
     activate(cards[(current + (i ? 1 : cards.length - 1)) % cards.length]);
   }));
@@ -80,7 +86,7 @@
     lugar.addEventListener('focusin', () => { lugarPaused = true; });
     lugar.addEventListener('focusout', event => { if (!lugar.contains(event.relatedTarget)) lugarPaused = false; });
     setInterval(() => {
-      if (!lugarVisible || lugarPaused || document.hidden) return;
+      if (narrow.matches || !lugarVisible || lugarPaused || document.hidden) return;
       const current = cards.findIndex(card => card.classList.contains('is-active'));
       activate(cards[(current + 1) % cards.length]);
     }, 5000);
