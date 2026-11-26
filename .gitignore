@@ -1,0 +1,6 @@
+config/config.php
+storage/
+uploads/*
+!uploads/.htaccess
+.claude/
+.playwright-mcp/

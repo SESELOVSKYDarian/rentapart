@@ -1,0 +1,11 @@
+# Apache: protege carpetas internas y archivos sensibles.
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(app|config|database|scripts|storage|backups)(/|$) - [F,L]
+</IfModule>
+
+<FilesMatch "^\.|\.(sql|md|lock)$">
+  Require all denied
+</FilesMatch>
