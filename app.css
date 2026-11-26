@@ -135,3 +135,7 @@ body { font-family: 'Geist', 'DM Sans', sans-serif; }
   .fx-book { padding: 24px 20px; }
 }
 @media (max-width: 760px) { .fx-book { min-width: 0; width: 100%; } .fx-main { flex-basis: 100%; } }
+
+/* Mientras se consulta el backend no se muestran datos de demostración */
+#app { transition: opacity .25s ease; }
+html.api-loading #app { opacity: 0; }

@@ -5,8 +5,12 @@
 
   /* ───────── Propiedad elegida (la usa app.html) ───────── */
   document.addEventListener('click', event => {
-    const link = event.target.closest('a[data-property]');
-    if (link) { try { sessionStorage.property = link.dataset.property; } catch {} }
+    const link = event.target.closest('a[data-property], a[data-property-id]');
+    if (!link) return;
+    try {
+      if (link.dataset.propertyId) sessionStorage.setItem('propertyId', link.dataset.propertyId);
+      else sessionStorage.property = link.dataset.property;
+    } catch {}
   });
 
   /* ───────── Personalización guardada desde el panel de administración (demo) ───────── */
@@ -24,6 +28,94 @@
     }
     if (/^\d{8,15}$/.test(phone)) $('.foot-wa').href = 'https://wa.me/' + phone;
   }
+
+  /* ───────── Datos reales del backend PHP (si está disponible) ───────── */
+  const FALLBACK_IMG = 'assets/fdfa7.webp';
+  const safePath = p => (typeof p === 'string' && /^(uploads|assets)\/[A-Za-z0-9\/_.-]+$/.test(p)) ? p : FALLBACK_IMG;
+  const bgUrl = p => 'url("' + safePath(p) + '")';
+  let heroImageFromSite = false;
+
+  function setHeroTitle(text) {
+    const h1 = $('.hero h1');
+    const line = document.createElement('span');
+    line.className = 'line';
+    const inner = document.createElement('span');
+    inner.textContent = text;
+    line.append(inner);
+    h1.replaceChildren(line);
+  }
+
+  function applySite(site) {
+    if (!site) return;
+    if (typeof window.rentapartApplyBrand === 'function') window.rentapartApplyBrand(site);
+    if (site.hero_title) setHeroTitle(String(site.hero_title).slice(0, 120));
+    if (typeof site.hero_image === 'string' && /^uploads\/site\/[A-Za-z0-9._-]+$/.test(site.hero_image)) {
+      const first = $('.hero-bg .slide i');
+      if (first) { first.style.backgroundImage = bgUrl(site.hero_image); heroImageFromSite = true; }
+    }
+    if (site.email && /^[^\s@]+@[^\s@]+$/.test(site.email)) {
+      const mail = $('.foot-mail');
+      mail.textContent = site.email;
+      mail.href = 'mailto:' + encodeURIComponent(site.email);
+    }
+    if (site.whatsapp && /^\d{8,15}$/.test(site.whatsapp)) $('.foot-wa').href = 'https://wa.me/' + site.whatsapp;
+    // Con backend, los accesos de agentes llevan al panel real.
+    $$('.foot-cols a[href="app.html#acceso"]').forEach(a => { a.href = 'admin/login.php'; });
+  }
+
+  function fillFromApi(list) {
+    const pick = i => list[i % list.length];
+    const money = p => 'USD ' + Math.round(p.price_night);
+    const place = p => [p.district, p.city].filter(Boolean).join(', ');
+    const link = (el, p) => { el.removeAttribute('data-property'); el.dataset.propertyId = String(p.id); };
+
+    $$('.hero-bg .slide i').forEach((el, i) => { if (!(i === 0 && heroImageFromSite)) el.style.backgroundImage = bgUrl(pick(i).cover); });
+
+    $$('.hero-place .place-card').forEach((card, i) => {
+      const p = pick(i);
+      link(card, p);
+      $('.thumb', card).style.backgroundImage = bgUrl(p.cover);
+      $('.info strong', card).textContent = p.name;
+      const spans = $$('.info > span', card);
+      spans[0].textContent = place(p);
+      spans[1].textContent = money(p) + ' por noche';
+    });
+
+    $$('.destinos-photos a').forEach((a, i) => {
+      const p = pick(i);
+      link(a, p);
+      const img = $('img', a);
+      img.src = safePath(p.cover);
+      img.alt = p.district || p.name;
+      $('strong', a).textContent = p.district || p.name;
+      $('small', a).textContent = money(p) + ' / noche';
+    });
+
+    $$('.lcard').forEach((card, i) => {
+      const p = pick(i);
+      card.removeAttribute('data-property');
+      card.style.backgroundImage = bgUrl(p.cover);
+      $('.tag', card).textContent = p.tag || p.type;
+      $('.meta strong', card).textContent = p.name;
+      $('.meta small', card).textContent = place(p);
+      $('.meta b', card).textContent = money(p);
+      const open = $('.open', card);
+      link(open, p);
+      open.setAttribute('aria-label', 'Ver ' + p.name);
+    });
+  }
+
+  (async () => {
+    try {
+      applySite(await window.rentapartSite);
+      const response = await fetch('api/properties.php', { headers: { Accept: 'application/json' }, cache: 'no-store' });
+      if (!response.ok || !(response.headers.get('content-type') || '').includes('json')) return;
+      const data = await response.json();
+      if (!Array.isArray(data.properties)) return;
+      if (data.properties.length) fillFromApi(data.properties);
+      else $$('.hero-place, .destinos, .lugar').forEach(el => { el.hidden = true; });
+    } catch { /* sin backend: se queda el contenido de demostración */ }
+  })();
 
   /* ───────── Buscador ───────── */
   const form = $('.search');

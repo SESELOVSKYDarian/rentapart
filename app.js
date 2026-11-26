@@ -1,4 +1,5 @@
-const properties=readDemo('rentapartProperties', [{name:'Palermo botánico',district:'PALERMO',city:'Buenos Aires',type:'Departamento',tag:'Favorito',price:85,img:'fdfa7.webp'},{name:'Recoleta luz',district:'RECOLETA',city:'Buenos Aires',type:'Departamento',tag:'Nuevo',price:110,img:'29605.webp'},{name:'Núñez calma',district:'NÚÑEZ',city:'Buenos Aires',type:'Departamento',tag:'Disponible',price:72,img:'12205.webp'}]);
+document.documentElement.classList.add('api-loading');
+let properties=readDemo('rentapartProperties', [{name:'Palermo botánico',district:'PALERMO',city:'Buenos Aires',type:'Departamento',tag:'Favorito',price:85,img:'fdfa7.webp'},{name:'Recoleta luz',district:'RECOLETA',city:'Buenos Aires',type:'Departamento',tag:'Nuevo',price:110,img:'29605.webp'},{name:'Núñez calma',district:'NÚÑEZ',city:'Buenos Aires',type:'Departamento',tag:'Disponible',price:72,img:'12205.webp'}]);
 const app=document.querySelector('#app'),modal=document.querySelector('#modal'); let chosen=Number(sessionStorage.property||0), admin=false; if (!properties[chosen]) chosen = 0;
 const link=(label,path,cls='')=>`<a class="${cls}" href="#${path}">${label}</a>`;
 const button=(label,action,cls='')=>`<button class="btn ${cls}" data-action="${action}">${label}</button>`;
@@ -15,6 +16,46 @@ function escapeDemo(value) {
 
 const dateFormat = new Intl.DateTimeFormat('es-AR', { dateStyle: 'medium', timeZone: 'UTC' });
 const stayDay = 86400000;
+const API = { on: false };
+const API_PLACEHOLDER = 'assets/fdfa7.webp';
+
+function mapApiProperty(p) {
+  const photos = Array.isArray(p.photos) ? p.photos : [];
+  return {
+    id: p.id, name: p.name, district: String(p.district || '').toUpperCase(), city: p.city, type: p.type, tag: p.tag,
+    price: Number(p.price_night), cleaning: Number(p.cleaning_fee), maxGuests: p.max_guests,
+    bedrooms: p.bedrooms, bathrooms: p.bathrooms, amenities: p.amenities || [], description: p.description || '',
+    photo: p.cover || photos[0] || API_PLACEHOLDER, photos,
+    unavailable: (p.unavailable || []).map(range => ({ arrival: range.start, departure: range.end }))
+  };
+}
+
+// Pide las propiedades al backend PHP. Si no hay backend (sitio estático) se siguen usando los datos de demostración.
+async function loadApi() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  try {
+    const response = await fetch('api/properties.php', { headers: { Accept: 'application/json' }, cache: 'no-store', signal: controller.signal });
+    if (!response.ok || !(response.headers.get('content-type') || '').includes('json')) throw new Error('sin api');
+    const data = await response.json();
+    if (!Array.isArray(data.properties)) throw new Error('formato');
+    properties = data.properties.map(mapApiProperty);
+    API.on = true;
+    const wanted = sessionStorage.getItem('propertyId');
+    if (wanted) {
+      const index = properties.findIndex(p => String(p.id) === wanted);
+      if (index >= 0) { chosen = index; sessionStorage.setItem('property', String(index)); }
+      sessionStorage.removeItem('propertyId');
+    }
+    if (!properties[chosen]) chosen = 0;
+  } catch {
+    API.on = false;
+  } finally {
+    clearTimeout(timer);
+  }
+  return API.on;
+}
+
 const sampleAvailability = { 0: [{ arrival: '2026-12-26', departure: '2026-12-29' }] };
 
 function readDemo(key, fallback) {
@@ -44,7 +85,7 @@ function getTrip() {
   const district = properties.some(property => property.district === input.district?.toUpperCase()) ? input.district.toUpperCase() : '';
   const type = ['Monoambiente', 'Departamento', 'Dúplex', 'Casa'].includes(input.type) ? input.type : '';
   const destination = String(input.destination || '').slice(0, 60);
-  return { arrival, departure, guests: Number(input.guests) === 1 ? 1 : 2, district, type, destination };
+  return { arrival, departure, guests: Math.min(10, Math.max(1, Number(input.guests) || 2)), district, type, destination };
 }
 
 function tripNights(trip) { return (Date.parse(trip.departure) - Date.parse(trip.arrival)) / stayDay; }
@@ -52,6 +93,9 @@ function nightsLabel(nights) { return nights === 1 ? '1 noche' : nights + ' noch
 function dateLabel(date) { return dateFormat.format(new Date(date)); }
 
 function available(property, trip) {
+  if (API.on) {
+    return (properties[property]?.unavailable || []).every(item => trip.departure <= item.arrival || trip.arrival >= item.departure);
+  }
   const reservations = readDemo('rentapartReservations', [])
     .filter(item => item.property === property && item.status !== 'cancelada');
   const blocked = readDemo('rentapartBlocks', []).filter(item => item.property === property);
@@ -59,18 +103,22 @@ function available(property, trip) {
     trip.departure <= item.arrival || trip.arrival >= item.departure);
 }
 
+function guestOptions(selected) {
+  return [1, 2, 3, 4, 5, 6].map(n => `<option value="${n}" ${selected === n ? 'selected' : ''}>${n === 1 ? '1 huésped' : n + ' huéspedes'}</option>`).join('');
+}
+
 function tripFields(trip, includeDistrict = false) {
   return `<label class="trip-field">Entrada<input type="date" name="arrival" value="${trip.arrival}" min="${earliestArrival()}" required></label>
   <label class="trip-field">Salida<input type="date" name="departure" value="${trip.departure}" min="${datePlus(trip.arrival, 1)}" required></label>
-  <label class="trip-field">Huéspedes<select name="guests"><option value="1" ${trip.guests === 1 ? 'selected' : ''}>1 adulto</option><option value="2" ${trip.guests === 2 ? 'selected' : ''}>2 adultos</option></select></label>
+  <label class="trip-field">Huéspedes<select name="guests">${guestOptions(trip.guests)}</select></label>
   ${includeDistrict ? `<label class="trip-field">Barrio<select name="district"><option value="">Todos los barrios</option>${['Palermo', 'Recoleta', 'Núñez'].map(name => `<option value="${name.toUpperCase()}" ${trip.district === name.toUpperCase() ? 'selected' : ''}>${name}</option>`).join('')}</select></label>` : ''}`;
 }
 
 function estimate(property, trip) {
   const nights = tripNights(trip);
   return `<div class="row"><span>${nightsLabel(nights)} × USD ${property.price}</span><span>USD ${nights * property.price}</span></div>
-  <div class="row"><span>Limpieza</span><span>USD 20</span></div>
-  <div class="row trip-total"><strong>Total</strong><strong>USD ${nights * property.price + 20}</strong></div>`;
+  <div class="row"><span>Limpieza</span><span>USD ${property.cleaning ?? 20}</span></div>
+  <div class="row trip-total"><strong>Total</strong><strong>USD ${nights * property.price + (property.cleaning ?? 20)}</strong></div>`;
 }
 
 const rxState = { cheap: false, sort: false };
@@ -121,7 +169,7 @@ function explorar() {
       <label>Tipo<select name="type"><option value="">Cualquier tipo</option>${rxTypes.map(t => `<option ${trip.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
       <label>Entrada<input type="date" name="arrival" value="${trip.arrival}" min="${earliestArrival()}" required></label>
       <label>Salida<input type="date" name="departure" value="${trip.departure}" min="${datePlus(trip.arrival, 1)}" required></label>
-      <label>Huéspedes<select name="guests"><option value="1" ${trip.guests === 1 ? 'selected' : ''}>1 huésped</option><option value="2" ${trip.guests === 2 ? 'selected' : ''}>2 huéspedes</option></select></label>
+      <label>Huéspedes<select name="guests">${guestOptions(trip.guests)}</select></label>
       <button class="rx-go" type="submit">Buscar</button>
     </form>
     <div class="rx-meta"><span class="rx-count">${rxCountLabel(matches.length)}</span><span>${escapeDemo(summary)}</span></div>
@@ -150,6 +198,7 @@ app.addEventListener('click', event => {
 
 function departamento() {
   const property = properties[chosen] || properties[0];
+  if (!property) { location.hash = 'explorar'; return explorar(); }
   const trip = getTrip();
   const district = rxDistrictLabel(property);
   const cover = escapeDemo(demoPropertyImage(property));
@@ -162,17 +211,14 @@ function departamento() {
     </section>
     <div class="fx-body">
       <div class="fx-main">
-        <div class="fx-facts"><span>${escapeDemo(property.type || 'Departamento')}</span><span>Hasta 2 huéspedes</span><span>1 dormitorio</span><span>1 baño</span></div>
+        <div class="fx-facts"><span>${escapeDemo(property.type || 'Departamento')}</span><span>Hasta ${property.maxGuests || 2} huéspedes</span><span>${property.bedrooms ?? 1} ${(property.bedrooms ?? 1) === 1 ? 'dormitorio' : 'dormitorios'}</span><span>${property.bathrooms ?? 1} ${(property.bathrooms ?? 1) === 1 ? 'baño' : 'baños'}</span></div>
         <p class="fx-lead">${escapeDemo(property.description || 'Un departamento equipado para estancias cortas, cerca de cafés, comercios y transporte.')}</p>
         <div class="fx-gallery">
           <img src="${cover}" alt="Sala principal">
-          <img src="assets/f9321.webp" alt="Dormitorio">
+          <img src="${escapeDemo((property.photos && property.photos[1]) || 'assets/f9321.webp')}" alt="Otra vista de ${escapeDemo(property.name)}">
         </div>
         <div class="fx-list">
-          <div><span>Wi-Fi</span><b>Incluido</b></div>
-          <div><span>Cocina equipada</span><b>Incluido</b></div>
-          <div><span>Aire acondicionado</span><b>Incluido</b></div>
-          <div><span>Ropa de cama</span><b>Incluida</b></div>
+          ${(property.amenities && property.amenities.length ? property.amenities : ['Wi-Fi', 'Cocina equipada', 'Aire acondicionado', 'Ropa de cama']).map(item => `<div><span>${escapeDemo(item)}</span><b>Incluido</b></div>`).join('')}
         </div>
         <a class="fx-map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(district + ', ' + (property.city || 'Buenos Aires'))}" target="_blank" rel="noopener">Ver ${escapeDemo(district)} en el mapa ↗</a>
       </div>
@@ -180,7 +226,7 @@ function departamento() {
         <div class="fx-price">USD ${property.price} <small>por noche</small></div>
         <div class="trip-fields">${tripFields(trip)}</div>
         <div class="trip-cost" aria-live="polite">${estimate(property, trip)}</div>
-        <p class="trip-status" role="status">${available(chosen, trip) ? 'Fechas disponibles en la demo.' : 'Estas fechas no están disponibles.'}</p>
+        <p class="trip-status" role="status">${available(chosen, trip) ? (API.on ? 'Fechas disponibles.' : 'Fechas disponibles en la demo.') : 'Estas fechas no están disponibles.'}</p>
         <button class="btn full" type="submit">Continuar a la reserva</button>
       </form>
     </div>
@@ -189,6 +235,7 @@ function departamento() {
 
 function reservar() {
   const property = properties[chosen] || properties[0];
+  if (!property) { location.hash = 'explorar'; return explorar(); }
   const trip = getTrip();
   return `${header()}<main class="container narrow">
     ${link('← Volver al departamento', 'departamento', 'back')}<h1>Tu próxima estadía</h1>
@@ -198,14 +245,28 @@ function reservar() {
       <label class="trip-field">Nombre y apellido<input name="name" autocomplete="name" required maxlength="100"></label>
       <label class="trip-field">Correo electrónico<input name="email" type="email" autocomplete="email" required></label>
       <label class="trip-field">Teléfono<input name="phone" type="tel" autocomplete="tel" required></label>
-      <p class="trip-status" role="status">Solicitud de demostración. No se envía un correo ni se realiza un cobro.</p>
-      <button class="btn full" type="submit">Enviar solicitud de demo</button>
+      ${API.on ? '<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">' : ''}
+      <p class="trip-status" role="status">${API.on ? 'Tu solicitud queda pendiente hasta que el agente la confirme. Todavía no se realiza ningún cobro.' : 'Solicitud de demostración. No se envía un correo ni se realiza un cobro.'}</p>
+      <button class="btn full" type="submit">${API.on ? 'Enviar solicitud' : 'Enviar solicitud de demo'}</button>
     </form>
     <aside class="panel summary"><h2>${escapeDemo(property.name)}</h2><div class="trip-cost" aria-live="polite">${estimate(property, trip)}</div></aside></div>
   </main>${footer()}`;
 }
 
 function confirmacion() {
+  if (API.on) {
+    const r = readDemo('rentapartApiReceipt', null);
+    if (!r) return `${header()}<main class="container narrow demo-receipt"><h1>Todavía no hay una solicitud</h1>${link('Volver a explorar', 'explorar', 'btn')}</main>${footer()}`;
+    return `${header()}<main class="container narrow demo-receipt"><h1>Solicitud enviada</h1>
+    <p class="lead">${escapeDemo(r.name)}, ${dateLabel(r.arrival)} a ${dateLabel(r.departure)}, ${r.guests} ${r.guests === 1 ? 'huésped' : 'huéspedes'}</p>
+    <div class="panel summary">
+      <div class="row"><span>Código de reserva</span><strong>${escapeDemo(r.code)}</strong></div>
+      <div class="row"><span>${nightsLabel(r.nights)}</span><span></span></div>
+      <div class="row trip-total"><strong>Total</strong><strong>USD ${Math.round(r.total)}</strong></div>
+    </div>
+    <p>El agente va a revisar tu solicitud y confirmarla. Guardá tu código de reserva.</p>
+    ${link('Volver a explorar', 'explorar', 'btn')}</main>${footer()}`;
+  }
   const receipts = readDemo('rentapartReservations', []);
   const receiptId = sessionStorage.getItem('rentapartReceipt');
   const receipt = receipts.find(item => item.id === receiptId);
@@ -249,7 +310,7 @@ app.addEventListener('change', event => {
   });
   if (form.dataset.tripForm === 'details') {
     form.querySelector('.trip-status').textContent = available(chosen, trip) ?
-      'Fechas disponibles en la demo.' : 'Estas fechas no están disponibles.';
+      (API.on ? 'Fechas disponibles.' : 'Fechas disponibles en la demo.') : 'Estas fechas no están disponibles.';
   }
 });
 
@@ -290,6 +351,42 @@ app.addEventListener('submit', event => {
     return;
   }
 
+  if (API.on) {
+    const property = properties[chosen];
+    const button = form.querySelector('[type="submit"]');
+    const status = form.querySelector('.trip-status');
+    button.disabled = true;
+    status.textContent = 'Enviando tu solicitud…';
+    fetch('api/reservation.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        property_id: property.id, check_in: trip.arrival, check_out: trip.departure, guests: trip.guests,
+        name: values.get('name'), email: values.get('email'), phone: values.get('phone'), website: values.get('website') || ''
+      })
+    })
+      .then(response => response.json().catch(() => ({ ok: false, error: 'Respuesta inesperada del servidor.' })).then(data => ({ response, data })))
+      .then(async ({ response, data }) => {
+        if (data.ok) {
+          sessionStorage.setItem('rentapartApiReceipt', JSON.stringify({
+            code: data.code, total: data.total, nights: data.nights, name: property.name,
+            arrival: trip.arrival, departure: trip.departure, guests: trip.guests
+          }));
+          await loadApi();
+          location.hash = 'confirmacion';
+        } else {
+          status.textContent = data.error || 'No pudimos registrar la reserva. Probá de nuevo.';
+          button.disabled = false;
+          if (response.status === 409) await loadApi();
+        }
+      })
+      .catch(() => {
+        status.textContent = 'No pudimos conectarnos con el servidor. Probá de nuevo.';
+        button.disabled = false;
+      });
+    return;
+  }
+
   const reservations = readDemo('rentapartReservations', []);
   const receipt = { ...trip, id: String(Date.now()), property: chosen, status: 'pendiente', rate: properties[chosen].price };
   sessionStorage.setItem('rentapartReservations', JSON.stringify([...reservations, receipt]));
@@ -306,7 +403,7 @@ app.addEventListener('click', event => {
   render();
 });
 
-function acceso(){return `${header()}<main class="login"><div class="login-photo"><div><h1>Buenos espacios.<br>Mejores experiencias.</h1><p>Tu gestión empieza acá.</p></div></div><div class="login-form"><h1>Bienvenido a tu espacio.</h1><p class="lead">Elegí un panel de demostración.</p>${link('Probar panel de agente　↗','agente/resumen','btn full')}<p style="margin-top:30px">${link('Probar administración','admin/resumen')}</p><p class="lead">La demo no inicia sesión en un servidor.</p></div></main>`}
+function acceso(){if(API.on){location.replace('admin/login.php');return ''}return `${header()}<main class="login"><div class="login-photo"><div><h1>Buenos espacios.<br>Mejores experiencias.</h1><p>Tu gestión empieza acá.</p></div></div><div class="login-form"><h1>Bienvenido a tu espacio.</h1><p class="lead">Elegí un panel de demostración.</p>${link('Probar panel de agente　↗','agente/resumen','btn full')}<p style="margin-top:30px">${link('Probar administración','admin/resumen')}</p><p class="lead">La demo no inicia sesión en un servidor.</p></div></main>`}
 const agentNav=[['Resumen','resumen'],['Propiedades','propiedades'],['Calendario','calendario'],['Reservas','reservas'],['Historial','historial']];const adminNav=[['Vista general','resumen'],['Agentes','agentes'],['Propiedades','propiedades'],['Reservas','reservas'],['Personalización','personalizacion']];
 function shell(section,content){let nav=admin?adminNav:agentNav, base=admin?'admin':'agente';return `${header()}<div class="dashboard"><aside class="sidebar"><p class="eyebrow">${admin?'ADMINISTRACIÓN':'ESPACIO DE AGENTES'}</p>${nav.map(([l,p])=>link(l,`${base}/${p}`,p===section?'active':'')).join('')}<div class="account"><strong>${admin?'Administración':'Marina Costa'}</strong><br><small>${admin?'Control de plataforma':'Agente · Cuenta privada'}</small><br>${link('Cerrar sesión','acceso')}</div></aside><main class="dashbody"><p class="demo-mode">Demo · Datos de esta sesión</p><div class="row"><p class="eyebrow">${admin?'ADMINISTRACIÓN':'ESPACIO DE AGENTES'}　/　${section.toUpperCase()}</p><small>Noviembre 2026　·　AR / USD</small></div>${content}</main></div>`}
 const dashHead=(title,desc,action='')=>`<div class="dash-head"><div><h1>${title}</h1><p class="muted">${desc}</p></div>${action}</div>`;
@@ -503,7 +600,7 @@ app.addEventListener('click', event => {
 });
 
 function show(title,body,actions=''){modal.innerHTML=`<div class="overlay"><div class="dialog"><button class="close" data-action="cerrar" aria-label="Cerrar">×</button><h2>${title}</h2>${body}${actions}</div></div>`}
-function render(){const parts=location.hash.slice(1).split('/'), page=parts[0]||'explorar';admin=page==='admin';if(page==='explorar')app.innerHTML=explorar();else if(page==='departamento')app.innerHTML=departamento();else if(page==='reservar')app.innerHTML=reservar();else if(page==='confirmacion')app.innerHTML=confirmacion();else if(page==='acceso')app.innerHTML=acceso();else if(page==='agente')app.innerHTML=agent(parts[1]||'resumen');else if(page==='admin')app.innerHTML=administration(parts[1]||'resumen');else app.innerHTML=explorar();window.scrollTo({top:0, left:0, behavior:"instant"})}
+function render(){const parts=location.hash.slice(1).split('/'), page=parts[0]||'explorar';admin=page==='admin';if(API.on&&(page==='agente'||page==='admin'||page==='acceso')){location.replace('admin/login.php');return}if(page==='explorar')app.innerHTML=explorar();else if(page==='departamento')app.innerHTML=departamento();else if(page==='reservar')app.innerHTML=reservar();else if(page==='confirmacion')app.innerHTML=confirmacion();else if(page==='acceso')app.innerHTML=acceso();else if(page==='agente')app.innerHTML=agent(parts[1]||'resumen');else if(page==='admin')app.innerHTML=administration(parts[1]||'resumen');else app.innerHTML=explorar();window.scrollTo({top:0, left:0, behavior:"instant"})}
 window.addEventListener('hashchange', () => {
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (document.startViewTransition && !reducedMotion) {
@@ -513,7 +610,8 @@ window.addEventListener('hashchange', () => {
   }
 });document.addEventListener('click',e=>{let property=e.target.closest('[data-property]');if(property){chosen=Number(property.dataset.property);sessionStorage.property=chosen}let el=e.target.closest('[data-action]');if(!el)return;e.preventDefault();const a=el.dataset.action;if(a==='cerrar'){modal.innerHTML='';return}if(a==='menu')show('rentapart',`<p>${link('Explorar departamentos','explorar')}</p><p>${link('Soy agente','acceso')}</p><p><a href="index.html#nosotros">Publicar una propiedad</a></p><small>hola@rentapart.com</small>`);else if(a==='filtros')show('Filtros de búsqueda',`${field('Precio máximo por noche','USD 120')}${field('Huéspedes','2 adultos')}<p>Comodidades</p><p>☐ Wi-Fi　☐ Cocina　☐ Aire acondicionado</p>`,button('Aplicar filtros','cerrar','full'));else if(a==='detalle')show('Detalles de mi reserva',`<p>${properties[chosen].name}<br>18–22 dic 2026 · 2 adultos</p>${estimate(properties[chosen],getTrip())}`,button('Cancelar solicitud','cancelar','full outline'));else if(a==='agente')show('Datos del agente',`<p>Acceso privado a sus propias propiedades.</p>${field('Nombre y apellido','Marina Costa')}${field('Correo electrónico','marina@rentapart.com')}${field('Estado de la cuenta','Activo')}<p>Se enviará una invitación por correo para crear su cuenta.</p>`,button('Guardar agente','guardado','full'));else if(a==='desactivar')show('¿Desactivar cuenta?','<p>Ya no podrá acceder a su espacio de gestión.</p>',button('Confirmar desactivación','guardado','full')+button('Cerrar','cerrar','full light'));else if(a==='cancelar')show('¿Cancelar solicitud?','<p>Las fechas volverán a estar disponibles para futuras reservas.</p>',button('Confirmar cancelación','cancelado','full')+button('Volver','cerrar','full light'));else if(a==='guardado'||a==='confirmar'||a==='cancelado'||a==='bloqueado')show(a==='guardado'?'Cambios guardados':a==='confirmar'?'Solicitud confirmada':a==='cancelado'?'Solicitud cancelada':'Fechas bloqueadas','<p>Los cambios se muestran en esta demostración.</p>',button('Continuar','cerrar','full'));else if(a==='archivo')show('Cambiar imagen','<p>Seleccioná una imagen para actualizar la vista previa.</p><input type="file" accept="image/*">',button('Cerrar','cerrar','full'));else if(a==='dia')el.classList.toggle('selected');else if(a==='filtroagentes')show('Filtrar agentes','<p>Elegí el estado de las cuentas.</p><p>☐ Activos　☐ Inactivos</p>',button('Aplicar','cerrar','full'));});render();
 
-
-
-
-
+// Conexión con el backend PHP: al cargar, se reemplazan los datos de demostración por los reales.
+loadApi().then(on => {
+  if (on) render();
+  document.documentElement.classList.remove('api-loading');
+});

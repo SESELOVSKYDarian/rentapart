@@ -9,6 +9,26 @@ for (const [key, token] of [['ink', '--rentapart-ink'], ['paper', '--rentapart-p
   }
 }
 
+// Personalización guardada en el backend PHP (logo y colores). Si no hay backend, simplemente se ignora.
+window.rentapartSite = window.rentapartSite || fetch('api/site.php', { headers: { Accept: 'application/json' }, cache: 'no-store' })
+  .then(r => (r.ok && (r.headers.get('content-type') || '').includes('json')) ? r.json() : null)
+  .catch(() => null);
+
+window.rentapartApplyBrand = site => {
+  if (!site) return;
+  const root = document.documentElement;
+  if (/^#[0-9a-f]{6}$/i.test(site.ink)) root.style.setProperty('--rentapart-ink', site.ink);
+  if (/^#[0-9a-f]{6}$/i.test(site.paper)) root.style.setProperty('--rentapart-paper', site.paper);
+  if (typeof site.logo === 'string' && /^uploads\/site\/[a-z0-9._-]+$/i.test(site.logo)) {
+    document.querySelectorAll('.site-brand').forEach(brand => {
+      const image = document.createElement('img');
+      image.src = site.logo;
+      image.alt = 'rentapart';
+      brand.replaceChildren(image);
+    });
+  }
+};
+
 class RentApartNavbar extends HTMLElement {
   connectedCallback() {
     if (!this.querySelector('nav')) {
@@ -65,6 +85,8 @@ class RentApartNavbar extends HTMLElement {
     this.onOutside = event => { if (!this.contains(event.target)) this.setMenu(false); };
     document.addEventListener('keydown', this.onKey);
     document.addEventListener('pointerdown', this.onOutside);
+
+    window.rentapartSite.then(site => window.rentapartApplyBrand(site));
 
     this.syncScroll = () => this.classList.toggle('is-floating', !onHero || window.scrollY > 60);
     this.syncScroll();
